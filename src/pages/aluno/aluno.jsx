@@ -6,16 +6,23 @@ import Select from "react-select";
 import { ToastContainer, toast } from 'react-toastify';
 import logo from "../../assets/nao_encontrado.png";
 
-function Aluno(){
-    const notify = () => toast.success("Aluno Cadastrado com Sucesso!",{
-                                       position: "top-right",
-                                       autoClose: 3000,
-                                       });
+import { formatarDataParaInput } from "../../constants/functions.jsx";
 
+function Aluno(){
+    const [textToast, setTextToast] = useState("");
+
+    // const notify = (message) => toast.success(message,{
+    //                                 position: "top-right",
+    //                                 autoClose: 3000,
+    //                                 });
+                                    
+    
     const [alunos, setAlunos] = useState([]);
     const [instrumentos, setInstrumentos] = useState([]);
     const [turmas, setTurmas] = useState([]);
     const [turma, setTurma] = useState("");    
+    const [instrumentoSelect, setInstrumentoSelect] = useState([]);    
+    
     const [novo, setNovo] = useState(true);
 
     /* CamposCadastro */    
@@ -57,6 +64,7 @@ function Aluno(){
         setEndResp("");
         setSituacao("Ativo");
         setTurmaCad("");
+        setInstrumentoSelect("");
     }
 
     async function listarAlunos(){
@@ -64,6 +72,11 @@ function Aluno(){
             turma: turma
         }).then((response) => {
             setAlunos(response.data);
+
+            // setAlunos({
+            //     ...response.data,
+            //     nascimento: formatarDataParaInput(response.data.nascimento)
+            // });
         }).catch((err) => {
             console.log(HandleErros(err));
         })
@@ -87,7 +100,8 @@ function Aluno(){
         })
     }
 
-    async function salvarAluno(){           
+    async function salvarAluno(){   
+        setTextToast("");        
         if (novo) {
             await api.post("/alunos/registro", {                
                 nome: nome,
@@ -105,16 +119,34 @@ function Aluno(){
                 if (response.data.id) {
                     CloseModal('adicionarAluno');
                     listarAlunos();
-                    notify();
+                    setTextToast("Aluno Cadastrado com Sucesso!");
+                    // notify(textToast);
                 }
             }).catch((err) => {
                 console.log(HandleErros(err));
             });
         }else{
             await api.put("/alunos/registro",{
+                id: id_aluno,
+                nome: nome,
+                turma: turma_cadastro,
+                id_instrumento: id_instrumento,
+                nascimento: nascimento,
+                nome_responsavel: nome_responsavel,
+                rg_responsavel: rg_responsavel,
+                cpf_responsavel: cpf_responsavel,
+                grau_parentesco: grau_parentesco,
+                endereco_responsavel: endereco_responsavel,
+                situacao: situacao,
+                id_turma: id_turma
 
             }).then((response) => {
-                
+                if (response.data.id) {
+                    CloseModal('adicionarAluno');
+                    listarAlunos();
+                    setTextToast("Aluno Alterado com Sucesso!");
+                    // notify(textToast);
+                }
             }).catch((err) => {
                 console.log(HandleErros(err));
             });
@@ -128,14 +160,36 @@ function Aluno(){
         console.log(e);
     }
 
-    function handleChangeInstrumento(e){
+    const handleChangeInstrumento = (e) => {
         setIdInstrumento(e.value);
+        setInstrumentoSelect(e);
     }
 
-    function abrirCadastro(novo){
+    function abrirCadastro(novo, aluno){
         limpaCampos();
         setNovo(novo);
         setTurmaCad(turma);
+
+        if (!novo){
+            setIdAluno(aluno.id);
+            setNomeAluno(aluno.nome);
+            
+            setIdInstrumento(aluno.id_instrumento);
+            
+            const valorPadrao = instrumentos.find(fam => fam.value === Number(aluno.id_instrumento));
+            setInstrumentoSelect(valorPadrao);
+
+            setNascimento(formatarDataParaInput(aluno.nascimento));
+            setNomeResp(aluno.nome_responsavel);
+            setRGResp(aluno.rg_responsavel);
+            setCPF(aluno.cpf_responsavel);
+            setGrauParent(aluno.grau_parentesco);
+            setEndResp(aluno.endereco_responsavel);
+            setSituacao("Ativo");
+            setTurmaCad(aluno.turma);
+            setIdTurma(aluno.id_turma);
+        }        
+        
         OpenModal('adicionarAluno');        
     }
 
@@ -147,6 +201,16 @@ function Aluno(){
     useEffect(() => {
         listarAlunos(turma);
     }, [turma]);
+
+    useEffect(() => {
+        const notify = () => toast.success(textToast, {
+            position: "top-right",
+            autoClose: 3000,
+        });
+        textToast != '' ? notify() : null;
+    
+    // Salvar a função no estado ou ref se necessário
+    }, [textToast]);
 
     return <>
                 <Navbar />
@@ -209,7 +273,7 @@ function Aluno(){
                                                             <td>{aluno.instrumento}</td>
                                                             <td>{aluno.turma}</td>
                                                             <td className="text-end">
-                                                                <button className="btn btn-sm btn-purple" onClick={() => abrirCadastro(false)}><i className="bi bi-pencil-square"></i></button>
+                                                                <button className="btn btn-sm btn-purple" onClick={() => abrirCadastro(false, aluno)}><i className="bi bi-pencil-square"></i></button>
                                                                 <button className="btn btn-sm btn-danger ms-3"><i className="bi bi-trash3"></i></button>
                                                             </td>
                                                         </tr>   
@@ -246,7 +310,7 @@ function Aluno(){
 
                             <div className="mb-3">
                                 <div className="form-floating">
-                                    <input className="form-control border-1 shadow-none" type="date" name="nascimento" id="nascimento" placeholder="Nascimento" onChange={(e) => setNascimento(e.target.value)} value={nascimento} />  
+                                    <input className="form-control border-1 shadow-none" type="date" name="nascimento" id="nascimento" placeholder="Nascimento" onChange={(e) => setNascimento(e.target.value)} value={nascimento || ""} />  
                                     <label htmlFor="floatingInput">Nascimento</label>
                                 </div>
                             </div>
@@ -265,8 +329,8 @@ function Aluno(){
 
                             <div className="mb-3">
                                 <div className="form-floating">
-                                    {
-                                        instrumentos.length > 0 && <Select options={instrumentos} defaultValue={instrumentos[0]} onChange={(e) => handleChangeInstrumento(e)} />
+                                    {    
+                                        instrumentos.length > 0 && <Select options={instrumentos} defaultValue={instrumentos[0]} value={instrumentoSelect} onChange={handleChangeInstrumento} />
                                     }
                                     
                                 </div>                                
@@ -285,3 +349,16 @@ function Aluno(){
 
 
 export default Aluno;
+
+    {/* <input 
+    type="text" 
+    value={aluno.nome} 
+    onChange={(e) => setAluno({...aluno, nome: e.target.value})}
+    placeholder="Nome"
+/>
+
+<input 
+    type="date" 
+    value={aluno.nascimento} 
+    onChange={(e) => setAluno({...aluno, nascimento: e.target.value})}
+/> */}

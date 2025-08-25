@@ -25,6 +25,7 @@ function Login(){
             localStorage.setItem("sessionId", response.data.id_usuario);
             localStorage.setItem("sessionNome", response.data.nome);
             localStorage.setItem("sessionEmail", response.data.email);
+            localStorage.setItem("cnpj", response.data.cnpj_empresa);
 
             setLoading(false);
             
