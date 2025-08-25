@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import logo from "../../assets/logoLateral.png";
+import logo from "../../assets/LogoLateral.png";
 import "./navbar.css";
 
 function Navbar(){
