@@ -1,0 +1,10 @@
+.img-background{
+    object-fit: cover;
+    width: 70%;
+    height: 100vh;
+    object-fit: fill;
+}
+
+.form-signin{
+    width: 350px;
+}
