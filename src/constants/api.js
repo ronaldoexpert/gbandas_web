@@ -11,7 +11,7 @@ const api = axios.create({
 
 api.interceptors.request.use((req) => {
     if (localStorage.getItem("sessionToken"))
-        req.headers.Authorization = "Bearer " + localStorage.getItem("sessionToken");
+        req.headers.Authorization = "Bearer " + localStorage.getItem("sessionToken");    
     
     if (localStorage.getItem("cnpj")) {
         // Para requisições que já têm body (POST, PUT, PATCH)
